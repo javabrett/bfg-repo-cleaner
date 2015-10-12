@@ -100,7 +100,10 @@ object CLIConfig {
     opt[Unit]("strict-object-checking").text("perform additional checks on integrity of consumed & created objects").hidden().action {
       (_, c) => c.copy(strictObjectChecking = true)
     }
-    opt[Unit]("private").text("treat this repo-rewrite as removing private data (for example: omit old commit ids from commit messages)").action {
+    opt[Unit]("private").text("treat this repo-rewrite as removing private data (for example: omit old commit ids from commit messages)"
+      .concat("\n        ")
+      .concat("This option is implied if any text-filtering (-rt) is enabled, use --no-private to override."))
+      .action {
       (_, c) => c.copy(sensitiveData = Some(true))
     }
     opt[Unit]("no-private").text("negates --private option (see --private)").action {
@@ -184,7 +187,7 @@ case class CLIConfig(stripBiggestBlobs: Option[Int] = None,
     new LfsBlobConverter(lfsGlobExpr, repo)
   }
 
-  lazy val privateDataRemoval = sensitiveData.getOrElse(Seq(fileDeletion, folderDeletion, blobTextModifier).flatten.nonEmpty)
+  lazy val privateDataRemoval = sensitiveData.getOrElse(Seq(blobTextModifier).flatten.nonEmpty)
 
   lazy val objectIdSubstitutor = if (privateDataRemoval) ObjectIdSubstitutor.OldIdsPrivate else ObjectIdSubstitutor.OldIdsPublic
 
