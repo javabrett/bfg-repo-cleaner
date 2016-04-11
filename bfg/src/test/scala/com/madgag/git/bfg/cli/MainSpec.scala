@@ -44,7 +44,7 @@ class MainSpec extends Specification {
 
     "remove empty trees" in new unpackedRepo("/sample-repos/folder-example.git.zip") {
       ensureRemovalOf(commitHistory(haveFolder("secret-files").atLeastOnce)) {
-        run("--delete-files {credentials,passwords}.txt")
+        run("--delete-files {credentials,passwords}.txt --no-replace-blobs")
       }
     }
 
