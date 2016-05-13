@@ -48,6 +48,18 @@ class MainSpec extends Specification {
       }
     }
 
+    "remove empty trees with multiple delete-files" in new unpackedRepo("/sample-repos/folder-example.git.zip") {
+      ensureRemovalOf(commitHistory(haveFolder("secret-files").atLeastOnce)) {
+        run("-D credentials.txt -D passwords.txt")
+      }
+    }
+
+    "remove empty trees with multiple delete-folders" in new unpackedRepo("/sample-repos/folder-example.git.zip") {
+      ensureRemovalOf(commitHistory(haveFolder("secret-files").atLeastOnce), commitHistory(haveFolder("big-files").atLeastOnce)) {
+        run("--delete-folders secret-files --delete-folders big-files")
+      }
+    }
+        
     "remove all big blobs, even if they have identical size" in new unpackedRepo("/sample-repos/moreThanOneBigBlobWithTheSameSize.git.zip") {
       ensureRemovalOfBadEggs(packedBlobsOfSize(1024), contain(allOf(abbrId("06d7"), abbrId("cb2c")))) {
         run("--strip-blobs-bigger-than 512B")
