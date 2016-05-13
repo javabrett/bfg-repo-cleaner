@@ -50,7 +50,7 @@ class MainSpec extends Specification {
 
     "remove empty trees with multiple delete-files" in new unpackedRepo("/sample-repos/folder-example.git.zip") {
       ensureRemovalOf(commitHistory(haveFolder("secret-files").atLeastOnce)) {
-        run("-D credentials.txt -D passwords.txt")
+        run("-D credentials.txt -D passwords.txt --no-replace-blobs")
       }
     }
 
