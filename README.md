@@ -24,6 +24,7 @@ This fork includes a couple of changes/enhancements on `master` that at the time
 * [PR #140](https://github.com/rtyley/bfg-repo-cleaner/pull/140) to split the `--private` switch into three new options: `--no-formerly-log-text`, `--no-formerly-commit-footer` and `--no-replace-blobs` to allow explicit control of privacy options, and make them inactive by-default.  `--private` activates all three options.
 * [PR #145](https://github.com/rtyley/bfg-repo-cleaner/pull/145) to improve some CLI error-output
 * [PR #146](https://github.com/rtyley/bfg-repo-cleaner/pull/146) which works-around a JGit gc bug mentioned in [#38](https://github.com/rtyley/bfg-repo-cleaner/issues/38)
+* [PR #147](https://github.com/rtyley/bfg-repo-cleaner/pull/147) adds a --prune-empty-commits option
 * This change documentation.
 
 This master branch is built via:
@@ -32,6 +33,7 @@ GIT_EDITOR=: git merge --no-ff no-loose-no-gc
 GIT_EDITOR=: git merge --no-ff unbound-file-matcher-privacy-merge
 GIT_EDITOR=: git merge --no-ff cli-error-messages
 GIT_EDITOR=: git merge --no-ff replace-orig-head-38
+GIT_EDITOR=: git merge --no-ff prune-empty-commits
 GIT_EDITOR=: git merge --no-ff doc
 ```
 
