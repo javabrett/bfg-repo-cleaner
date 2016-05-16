@@ -23,6 +23,7 @@ package com.madgag.git.bfg.cli
 import com.madgag.git._
 import com.madgag.git.bfg.GitUtil._
 import com.madgag.git.bfg.cleaner._
+import org.eclipse.jgit.lib.CoreConfig
 
 object Main extends App {
 
@@ -41,7 +42,7 @@ object Main extends App {
         } else {
           implicit val repo = config.repo
 
-          println("\nUsing repo : " + repo.getDirectory.getAbsolutePath + "\n")
+          println(s"\nUsing repo : " + repo.getDirectory.getAbsolutePath + s" which is ${if (repo.isBare) "" else "not "}bare\n")
 
           // do this before implicitly initiating big-blob search
           if (hasBeenProcessedByBFGBefore(repo)) {
