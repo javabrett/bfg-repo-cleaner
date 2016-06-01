@@ -161,6 +161,8 @@ case class CLIConfig(stripBiggestBlobs: Option[Int] = None,
 
   lazy val objectChecker = if (strictObjectChecking) Some(new ObjectChecker()) else None
 
+  implicit lazy val protectedObjectIds = objectProtection.blobIds
+
   lazy val fileDeletion: Seq[Cleaner[TreeBlobs]] = deleteFiles.map {
     case textMatcher if (replaceDeletedBlobs) => new FileDeleter(textMatcher, Some(new BlobInserter(repo.getObjectDatabase.threadLocalResources.inserter())))
     case textMatcher => new FileDeleter(textMatcher, None)
