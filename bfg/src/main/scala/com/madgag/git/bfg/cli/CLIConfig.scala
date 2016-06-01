@@ -47,7 +47,7 @@ object CLIConfig {
     def fileMatcher(name: String, defaultType: TextMatcherType = Glob) = {
       implicit val textMatcherRead = Read.reads { TextMatcher(_, defaultType) }
 
-      opt[TextMatcher](name).valueName(s"<${defaultType.expressionPrefix}>").validate { m =>
+      opt[TextMatcher](name).unbounded.valueName(s"<${defaultType.expressionPrefix}>").validate { m =>
         if (m.expression.contains('/')) {
           failure("*** Can only match on filename, NOT path *** - remove '/' path segments")
         } else success
@@ -69,10 +69,10 @@ object CLIConfig {
       (v, c) => c.copy(stripBlobsWithIds = Some(v.lines().map(_.trim).filterNot(_.isEmpty).map(_.asObjectId).toSet))
     }
     fileMatcher("delete-files").abbr("D").text("delete files with the specified names (eg '*.class', '*.{txt,log}' - matches on file name, not path within repo)").action {
-      (v, c) => c.copy(deleteFiles = Some(v))
+      (v, c) => c.copy(deleteFiles = c.deleteFiles :+ v)
     }
     fileMatcher("delete-folders").text("delete folders with the specified names (eg '.svn', '*-tmp' - matches on folder name, not path within repo)").action {
-      (v, c) => c.copy(deleteFolders = Some(v))
+      (v, c) => c.copy(deleteFolders = c.deleteFolders :+ v)
     }
     opt[String]("convert-to-git-lfs").text("extract files with the specified names (eg '*.{zip,mp4}') into Git LFS").action {
       (v, c) => c.copy(lfsConversion = Some(v))
@@ -100,8 +100,20 @@ object CLIConfig {
     opt[Unit]("strict-object-checking").text("perform additional checks on integrity of consumed & created objects").hidden().action {
       (_, c) => c.copy(strictObjectChecking = true)
     }
-    opt[Unit]("private").text("treat this repo-rewrite as removing private data (for example: omit old commit ids from commit messages)").action {
-      (_, c) => c.copy(sensitiveData = Some(true))
+    opt[Unit]("private").text("privacy/cryptographic-safety options, equivalent of --no-formerly-log-text --no-formerly-commit-footer --no-replace-blobs").action {
+      (_, c) => c.copy(mentionFormerCommitInRewrite = false, addFormerCommitFooter = false, replaceDeletedBlobs = false)
+    }
+    opt[Unit]("no-formerly-log-text").text("privacy/cryptographic-safety option, don't mention former commit-hashes in re-written commit-log messages, e.g. [formerly <old-commit-hash>]").action {
+      (_, c) => c.copy(mentionFormerCommitInRewrite = false)
+    }
+    opt[Unit]("no-formerly-commit-footer").text("privacy/cryptographic-safety option, don't add former commit-hashes to the commmit-log footer e.g. Former-commit-id: <replaced commit hash>").action {
+      (_, c) => c.copy(addFormerCommitFooter = false)
+    }
+    opt[Unit]("no-replace-blobs").text("privacy/cryptographic-safety option, don't substitute deleted blobs with a reference file e.g. <filename>.REMOVED.git-id file").action {
+      (_, c) => c.copy(replaceDeletedBlobs = false)
+    }
+    opt[Unit]("prune-empty-commits").text("prune commits which don't make file changes (ie because content relating to the original commit change has been removed)").action {
+      (v, c) => c.copy(pruneEmptyCommits = true)
     }
     opt[String]("massive-non-file-objects-sized-up-to").valueName("<size>").text("increase memory usage to handle over-size Commits, Tags, and Trees that are up to X in size (eg '10M')").action {
       (v, c) => c.copy(massiveNonFileObjects = Some(ByteSize.parse(v)))
@@ -125,8 +137,9 @@ object CLIConfig {
 case class CLIConfig(stripBiggestBlobs: Option[Int] = None,
                      stripBlobsBiggerThan: Option[Int] = None,
                      protectBlobsFromRevisions: Set[String] = Set("HEAD"),
-                     deleteFiles: Option[TextMatcher] = None,
-                     deleteFolders: Option[TextMatcher] = None,
+                     deleteFiles: Seq[TextMatcher] = Seq(),
+                     deleteFolders: Seq[TextMatcher] = Seq(),
+                     pruneEmptyCommits: Boolean = false,
                      fixFilenameDuplicatesPreferring: Option[Ordering[FileMode]] = None,
                      filenameFilters: Seq[Filter[String]] = Nil,
                      filterSizeThreshold: Int = BlobTextModifier.DefaultSizeThreshold,
@@ -134,7 +147,9 @@ case class CLIConfig(stripBiggestBlobs: Option[Int] = None,
                      stripBlobsWithIds: Option[Set[ObjectId]] = None,
                      lfsConversion: Option[String] = None,
                      strictObjectChecking: Boolean = false,
-                     sensitiveData: Option[Boolean] = None,
+                     mentionFormerCommitInRewrite: Boolean = true,
+                     addFormerCommitFooter: Boolean = true,
+                     replaceDeletedBlobs: Boolean = true,
                      massiveNonFileObjects: Option[Int] = None,
                      repoLocation: File = new File(System.getProperty("user.dir"))) {
 
@@ -146,11 +161,14 @@ case class CLIConfig(stripBiggestBlobs: Option[Int] = None,
 
   lazy val objectChecker = if (strictObjectChecking) Some(new ObjectChecker()) else None
 
-  lazy val fileDeletion: Option[Cleaner[TreeBlobs]] = deleteFiles.map {
-    textMatcher => new FileDeleter(textMatcher)
+  implicit lazy val protectedObjectIds = objectProtection.blobIds
+
+  lazy val fileDeletion: Seq[Cleaner[TreeBlobs]] = deleteFiles.map {
+    case textMatcher if (replaceDeletedBlobs) => new FileDeleter(textMatcher, Some(new BlobInserter(repo.getObjectDatabase.threadLocalResources.inserter())))
+    case textMatcher => new FileDeleter(textMatcher, None)
   }
 
-  lazy val folderDeletion: Option[Cleaner[TreeSubtrees]] = deleteFolders.map {
+  lazy val folderDeletion: Seq[Cleaner[TreeSubtrees]] = deleteFolders.map {
     textMatcher => { subtrees: TreeSubtrees =>
       TreeSubtrees(subtrees.entryMap.filterKeys(filename => !textMatcher(filename)))
     }
@@ -180,14 +198,12 @@ case class CLIConfig(stripBiggestBlobs: Option[Int] = None,
     new LfsBlobConverter(lfsGlobExpr, repo)
   }
 
-  lazy val privateDataRemoval = sensitiveData.getOrElse(Seq(fileDeletion, folderDeletion, blobTextModifier).flatten.nonEmpty)
-
-  lazy val objectIdSubstitutor = if (privateDataRemoval) ObjectIdSubstitutor.OldIdsPrivate else ObjectIdSubstitutor.OldIdsPublic
+  lazy val objectIdSubstitutor = if (mentionFormerCommitInRewrite) ObjectIdSubstitutor.OldIdsPublic else ObjectIdSubstitutor.OldIdsPrivate
 
   lazy val treeEntryListCleaners = fixFileNameDuplication.toSeq
 
   lazy val commitNodeCleaners = {
-    lazy val formerCommitFooter = if (privateDataRemoval) None else Some(FormerCommitFooter)
+    lazy val formerCommitFooter = if (addFormerCommitFooter) Some(FormerCommitFooter) else None
 
     Seq(new CommitMessageObjectIdsUpdater(objectIdSubstitutor)) ++ formerCommitFooter
   }
@@ -217,15 +233,16 @@ case class CLIConfig(stripBiggestBlobs: Option[Int] = None,
       }
     }
 
-    Seq(blobsByIdRemover, blobRemover, fileDeletion, blobTextModifier, lfsBlobConverter).flatten
+    Seq(blobsByIdRemover, blobRemover, blobTextModifier, lfsBlobConverter).flatten ++ fileDeletion
   }
 
-  lazy val definesNoWork = treeBlobCleaners.isEmpty && folderDeletion.isEmpty && treeEntryListCleaners.isEmpty
+  lazy val definesNoWork = treeBlobCleaners.isEmpty && folderDeletion.isEmpty && treeEntryListCleaners.isEmpty && !pruneEmptyCommits
 
   def objectIdCleanerConfig: ObjectIdCleaner.Config =
     ObjectIdCleaner.Config(
       objectProtection,
       objectIdSubstitutor,
+      pruneEmptyCommits,
       commitNodeCleaners,
       treeEntryListCleaners,
       treeBlobCleaners,
@@ -234,10 +251,15 @@ case class CLIConfig(stripBiggestBlobs: Option[Int] = None,
     )
 
   def describe = {
-    if (privateDataRemoval) {
-      "is removing private data, so the '" + FormerCommitFooter.Key + "' footer will not be added to commit messages."
-    } else {
-      "is only removing non-private data (eg, blobs that are just big, not private) : '" + FormerCommitFooter.Key + "' footer will be added to commit messages."
-    }
+
+    def willOrWillNot(test: Boolean) = if (test) "* will " else "* will NOT "
+      
+    lazy val desc = List(
+        willOrWillNot(mentionFormerCommitInRewrite) + "mention former commit-hashes in re-written commit-log messages",
+        willOrWillNot(addFormerCommitFooter) + "add former commit-hashes to the commmit-log footer",
+        willOrWillNot(replaceDeletedBlobs) + "substitute deleted blobs with a reference file"
+    )
+    
+    desc.mkString("\n")
   }
 }
