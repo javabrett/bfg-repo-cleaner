@@ -25,6 +25,9 @@ This fork includes a couple of changes/enhancements on `master` that at the time
 * [PR #145](https://github.com/rtyley/bfg-repo-cleaner/pull/145) to improve some CLI error-output
 * [PR #146](https://github.com/rtyley/bfg-repo-cleaner/pull/146) which works-around a JGit gc bug mentioned in [#38](https://github.com/rtyley/bfg-repo-cleaner/issues/38)
 * [PR #147](https://github.com/rtyley/bfg-repo-cleaner/pull/147) adds a --prune-empty-commits option
+* [PR #149](https://github.com/rtyley/bfg-repo-cleaner/pull/149) protect protected (dirt) blobs in other (earlier) non-protected trees
+* [PR #151](https://github.com/rtyley/bfg-repo-cleaner/pull/151) always output BFG version string in reports
+* [PR #155](https://github.com/rtyley/bfg-repo-cleaner/pull/155) print detail of bare/non-bare repo
 * This change documentation.
 
 This master branch is built via:
