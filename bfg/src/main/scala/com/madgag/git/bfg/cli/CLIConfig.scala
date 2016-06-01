@@ -112,6 +112,9 @@ object CLIConfig {
     opt[Unit]("no-replace-blobs").text("privacy/cryptographic-safety option, don't substitute deleted blobs with a reference file e.g. <filename>.REMOVED.git-id file").action {
       (_, c) => c.copy(replaceDeletedBlobs = false)
     }
+    opt[Unit]("prune-empty-commits").text("prune commits which don't make file changes (ie because content relating to the original commit change has been removed)").action {
+      (v, c) => c.copy(pruneEmptyCommits = true)
+    }
     opt[String]("massive-non-file-objects-sized-up-to").valueName("<size>").text("increase memory usage to handle over-size Commits, Tags, and Trees that are up to X in size (eg '10M')").action {
       (v, c) => c.copy(massiveNonFileObjects = Some(ByteSize.parse(v)))
     }
@@ -136,6 +139,7 @@ case class CLIConfig(stripBiggestBlobs: Option[Int] = None,
                      protectBlobsFromRevisions: Set[String] = Set("HEAD"),
                      deleteFiles: Seq[TextMatcher] = Seq(),
                      deleteFolders: Seq[TextMatcher] = Seq(),
+                     pruneEmptyCommits: Boolean = false,
                      fixFilenameDuplicatesPreferring: Option[Ordering[FileMode]] = None,
                      filenameFilters: Seq[Filter[String]] = Nil,
                      filterSizeThreshold: Int = BlobTextModifier.DefaultSizeThreshold,
@@ -230,12 +234,13 @@ case class CLIConfig(stripBiggestBlobs: Option[Int] = None,
     Seq(blobsByIdRemover, blobRemover, blobTextModifier, lfsBlobConverter).flatten ++ fileDeletion
   }
 
-  lazy val definesNoWork = treeBlobCleaners.isEmpty && folderDeletion.isEmpty && treeEntryListCleaners.isEmpty
+  lazy val definesNoWork = treeBlobCleaners.isEmpty && folderDeletion.isEmpty && treeEntryListCleaners.isEmpty && !pruneEmptyCommits
 
   def objectIdCleanerConfig: ObjectIdCleaner.Config =
     ObjectIdCleaner.Config(
       objectProtection,
       objectIdSubstitutor,
+      pruneEmptyCommits,
       commitNodeCleaners,
       treeEntryListCleaners,
       treeBlobCleaners,
