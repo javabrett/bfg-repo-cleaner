@@ -41,6 +41,7 @@ object Main extends App {
           Console.err.println("Error: " + config.repoLocation + " is not a valid Git repository.")
           CLIConfig.parser.showUsage
         } else {
+          CLIConfig.parser.showHeader
           implicit val repo = config.repo
 
           println(s"\nUsing repo : " + repo.getDirectory.getAbsolutePath + s" which is ${if (repo.isBare) "" else "not "}bare\n")
