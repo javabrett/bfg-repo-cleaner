@@ -23,6 +23,7 @@ package com.madgag.git.bfg.cli
 import com.madgag.git._
 import com.madgag.git.bfg.GitUtil._
 import com.madgag.git.bfg.cleaner._
+import com.madgag.git.bfg.cli.stoptrump.dontGiveUp
 import org.eclipse.jgit.lib.CoreConfig
 
 object Main extends App {
@@ -65,7 +66,7 @@ object Main extends App {
             RepoRewriter.rewrite(repo, config.objectIdCleanerConfig)
             repo.close()
 
-            println("\n\nHas the BFG saved you time?  Support the BFG on BountySource:  https://j.mp/fund-bfg\n\n")
+            println(dontGiveUp())
           }
         }
     }
