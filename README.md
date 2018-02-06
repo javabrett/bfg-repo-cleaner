@@ -25,8 +25,7 @@ This fork includes some changes and enhancements on `master` that at the time of
 | [#137](https://github.com/rtyley/bfg-repo-cleaner/pull/137) | | `javabrett:unbound-file-matcher-options` | Unbound (allow multiple) file matcher options | Allow multiple arguments for file-glob style options ``--delete-files``, ``--delete-folders``, ``--filter-content-including`` and ``--filter-content-excluding``.  This allows multiple cleaning operations for these to be performed in a single batch-run. |
 | [#140](https://github.com/rtyley/bfg-repo-cleaner/pull/140) | | `javabrett:privacy-options` | | |
 | [#145](https://github.com/rtyley/bfg-repo-cleaner/pull/145) | [#48](https://github.com/rtyley/bfg-repo-cleaner/issues/48) | `javabrett:cli-error-messages` | Improved CLI error-message consistency, helps with some cases | Improve some CLI error-output |
-| [#147](https://github.com/rtyley/bfg-repo-cleaner/pull/147) | | `javabrett:prune-empty-commits` | Prune empty commits | Adds a --prune-empty-commits option
-|
+| [#147](https://github.com/rtyley/bfg-repo-cleaner/pull/147) | | `javabrett:prune-empty-commits` | Prune empty commits | Adds a --prune-empty-commits option |
 | [#149](https://github.com/rtyley/bfg-repo-cleaner/pull/149) | | `javabrett:blob-protection-history` | Protect dirt blobs in all trees, not just trees of protected refs | |
 | [#151](https://github.com/rtyley/bfg-repo-cleaner/pull/151) | | `javabrett:show-header-version` | Added call to scopt showHeader, so that BFG version-details are reported | Always output BFG version string in reports |
 | [#155](https://github.com/rtyley/bfg-repo-cleaner/pull/155) | | `javabrett:repo-bare-message`| Added output detailing whether the repo is bare or not | Print detail of bare/non-bare repo |
