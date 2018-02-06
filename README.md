@@ -23,13 +23,12 @@ This fork includes some changes and enhancements on `master` that at the time of
 | -- | ----- | ------ | ----- | ----- |
 | [#130](https://github.com/rtyley/bfg-repo-cleaner/pull/130) | [#115](https://github.com/rtyley/bfg-repo-cleaner/issues/115) | `javabrett:no-loose-no-gc` | Improvement for issue "Don't auto-run git gc" | Prevents `git gc` from auto-running when there are no existing loose/unpacked objects.  Assists with multiple runs of bfg where you might have manually run `git gc` between runs. |
 | [#137](https://github.com/rtyley/bfg-repo-cleaner/pull/137) | | `javabrett:unbound-file-matcher-options` | Unbound (allow multiple) file matcher options | Allow multiple arguments for file-glob style options ``--delete-files``, ``--delete-folders``, ``--filter-content-including`` and ``--filter-content-excluding``.  This allows multiple cleaning operations for these to be performed in a single batch-run. |
-| [#140](https://github.com/rtyley/bfg-repo-cleaner/pull/140) | | | | |
-| [#145](https://github.com/rtyley/bfg-repo-cleaner/pull/145) | | | | |
-| [#147](https://github.com/rtyley/bfg-repo-cleaner/pull/147) | | | | |
-| [#149](https://github.com/rtyley/bfg-repo-cleaner/pull/149) | | | | |
-| [#151](https://github.com/rtyley/bfg-repo-cleaner/pull/151) | | | | |
-| [#155](https://github.com/rtyley/bfg-repo-cleaner/pull/155) | | | | |
-| | | | | |
+| [#140](https://github.com/rtyley/bfg-repo-cleaner/pull/140) | | `javabrett:privacy-options` | | |
+| [#145](https://github.com/rtyley/bfg-repo-cleaner/pull/145) | | `javabrett:cli-error-messages` | | |
+| [#147](https://github.com/rtyley/bfg-repo-cleaner/pull/147) | | `javabrett:prune-empty-commits` | | |
+| [#149](https://github.com/rtyley/bfg-repo-cleaner/pull/149) | | `javabrett:blob-protection-history` | | |
+| [#151](https://github.com/rtyley/bfg-repo-cleaner/pull/151) | | `javabrett:show-header-version` | | |
+| [#155](https://github.com/rtyley/bfg-repo-cleaner/pull/155) | | `javabrett:repo-bare-message`| | |
 
 * [PR #140](https://github.com/rtyley/bfg-repo-cleaner/pull/140) to split the `--private` switch into three new options: `--no-formerly-log-text`, `--no-formerly-commit-footer` and `--no-replace-blobs` to allow explicit control of privacy options, and make them inactive by-default.  `--private` activates all three options.
 * [PR #145](https://github.com/rtyley/bfg-repo-cleaner/pull/145) to improve some CLI error-output
