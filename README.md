@@ -17,13 +17,22 @@ Main documentation for The BFG is here : **https://rtyley.github.io/bfg-repo-cle
 
 # Modifications in this fork
 
-This fork includes a couple of changes/enhancements on `master` that at the time of writing are not included in `rtyley/bfg-repo-cleaner:master`:
+This fork includes some changes and enhancements on `master` that at the time of writing are not included in `rtyley/bfg-repo-cleaner:master`:
 
-* [PR #130](https://github.com/rtyley/bfg-repo-cleaner/pull/130) to prevent `git gc` from auto-running when there are no existing loose/unpacked objects.  Assists with multiple runs of bfg where you might have manually run `git gc` between runs.
-* [PR #137](https://github.com/rtyley/bfg-repo-cleaner/pull/137) to allow multiple arguments for file-glob style options ``--delete-files``, ``--delete-folders``, ``--filter-content-including`` and ``--filter-content-excluding``.  This allows multiple cleaning operations for these to be performed in a single batch-run.
+| PR | Issue | Branch | Title | Notes |
+| -- | ----- | ------ | ----- | ----- |
+| [#130](https://github.com/rtyley/bfg-repo-cleaner/pull/130) | [#115](https://github.com/rtyley/bfg-repo-cleaner/issues/115) | `javabrett:no-loose-no-gc` | Improvement for issue "Don't auto-run git gc" | Prevents `git gc` from auto-running when there are no existing loose/unpacked objects.  Assists with multiple runs of bfg where you might have manually run `git gc` between runs. |
+| [#137](https://github.com/rtyley/bfg-repo-cleaner/pull/137) | | `javabrett:unbound-file-matcher-options` | Unbound (allow multiple) file matcher options | Allow multiple arguments for file-glob style options ``--delete-files``, ``--delete-folders``, ``--filter-content-including`` and ``--filter-content-excluding``.  This allows multiple cleaning operations for these to be performed in a single batch-run. |
+| [#140](https://github.com/rtyley/bfg-repo-cleaner/pull/140) | | | | |
+| [#145](https://github.com/rtyley/bfg-repo-cleaner/pull/145) | | | | |
+| [#147](https://github.com/rtyley/bfg-repo-cleaner/pull/147) | | | | |
+| [#149](https://github.com/rtyley/bfg-repo-cleaner/pull/149) | | | | |
+| [#151](https://github.com/rtyley/bfg-repo-cleaner/pull/151) | | | | |
+| [#155](https://github.com/rtyley/bfg-repo-cleaner/pull/155) | | | | |
+| | | | | |
+
 * [PR #140](https://github.com/rtyley/bfg-repo-cleaner/pull/140) to split the `--private` switch into three new options: `--no-formerly-log-text`, `--no-formerly-commit-footer` and `--no-replace-blobs` to allow explicit control of privacy options, and make them inactive by-default.  `--private` activates all three options.
 * [PR #145](https://github.com/rtyley/bfg-repo-cleaner/pull/145) to improve some CLI error-output
-* [PR #146](https://github.com/rtyley/bfg-repo-cleaner/pull/146) which works-around a JGit gc bug mentioned in [#38](https://github.com/rtyley/bfg-repo-cleaner/issues/38)
 * [PR #147](https://github.com/rtyley/bfg-repo-cleaner/pull/147) adds a --prune-empty-commits option
 * [PR #149](https://github.com/rtyley/bfg-repo-cleaner/pull/149) protect protected (dirt) blobs in other (earlier) non-protected trees
 * [PR #151](https://github.com/rtyley/bfg-repo-cleaner/pull/151) always output BFG version string in reports
