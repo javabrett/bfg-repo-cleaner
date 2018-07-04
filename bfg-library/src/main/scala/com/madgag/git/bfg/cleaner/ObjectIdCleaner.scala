@@ -20,7 +20,7 @@
 
 package com.madgag.git.bfg.cleaner
 
-import com.madgag.collection.concurrent.ConcurrentMultiMap
+import com.madgag.collection.concurrent.{ConcurrentMultiMap, ConcurrentSet}
 import com.madgag.git._
 import com.madgag.git.bfg.GitUtil._
 import com.madgag.git.bfg.cleaner.protection.{ProtectedObjectCensus, ProtectedObjectDirtReport}
@@ -64,6 +64,7 @@ class ObjectIdCleaner(config: ObjectIdCleaner.Config, objectDB: ObjectDatabase, 
 
   val changesByFilename = new ConcurrentMultiMap[FileName, (ObjectId, ObjectId)]
   val deletionsByFilename = new ConcurrentMultiMap[FileName, ObjectId]
+  val prunedCommits = new ConcurrentSet[ObjectId]
 
   // want to enforce that once any value is returned, it is 'good' and therefore an identity-mapped key as well
   val memo: Memo[ObjectId, ObjectId] = MemoUtil.concurrentCleanerMemo(protectedObjectCensus.fixedObjectIds)
@@ -102,7 +103,10 @@ class ObjectIdCleaner(config: ObjectIdCleaner.Config, objectDB: ObjectDatabase, 
 
     val cleanedArcs = originalCommit.arcs cleanWith this
 
-    if (config.pruneEmptyCommits && cleanedArcs.isEmptyCommit) cleanedArcs.parents.headOption.getOrElse(ObjectId.zeroId()) else {
+    if (config.pruneEmptyCommits && cleanedArcs.isEmptyCommit) {
+      prunedCommits += commitId
+      cleanedArcs.parents.headOption.getOrElse(ObjectId.zeroId())
+    } else {
       val kit = new CommitNodeCleaner.Kit(threadLocalResources, originalRevCommit, originalCommit, cleanedArcs, apply)
       val updatedCommitNode = commitNodeCleaner.fixer(kit)(originalCommit.node)
       val updatedCommit = Commit(updatedCommitNode, cleanedArcs)
