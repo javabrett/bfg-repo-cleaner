@@ -242,9 +242,16 @@ class CLIReporter(repo: Repository) extends Reporter {
       case (filename, oldIds) => (filename, Text.abbreviate(oldIds.map(oldId => oldId.shortName + oldId.sizeOpt.map(size => s" (${ByteSize.format(size)})").mkString), "...").mkString(", "))
     } { oldId => Seq(oldId.name, oldId.sizeOpt.mkString) }
 
-    println(s"\n\nIn total, ${changedIds.size} object ids were changed. Full details are logged here:\n\n\t${reportsDir.path}")
+    val prunedCommits = objectIdCleaner.prunedCommits
+    println(s"\n\n")
+    if (prunedCommits.nonEmpty) {
+      println(s"In total, ${prunedCommits.size} empty commits were pruned.")
+    }
+    println(s"In total, ${changedIds.size} object ids were changed. Full details are logged here:\n\n\t${reportsDir.path}")
 
-    mapFile.writeStrings(SortedMap[AnyObjectId, ObjectId](changedIds.toSeq: _*).view.map { case (o,n) => s"${o.name} ${n.name}"}, "\n")
+    mapFile.writeStrings(SortedMap[AnyObjectId, ObjectId](changedIds.toSeq: _*).view.map {
+      case (o,n) => if (prunedCommits.contains(o)) s"${o.name} 0000000000000000000000000000000000000000 ${n.name}" else s"${o.name} ${n.name}"
+    }, "\n")
 
     cacheStatsFile.writeStrings(objectIdCleaner.stats().seq.map(_.toString()), "\n")
 
